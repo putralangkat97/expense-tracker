@@ -21,6 +21,7 @@
   import BudgetSummaryCard from "./ui/BudgetSummaryCard.vue";
   import BudgetCategoryItem from "./ui/BudgetCategoryItem.vue";
   import CreateBudgetModal from "./CreateBudgetModal.vue";
+  import BudgetDetailModal from "./BudgetDetailModal.vue";
   import TopAppBar from "./ui/TopAppBar.vue";
   import { useAuthStore } from "../stores/auth";
   import { budgetService, categoryService } from "../services/finance";
@@ -30,6 +31,9 @@
   const isEditMode = ref(false);
   const budgetToEdit = ref(null);
   const isLoading = ref(false);
+
+  const showBudgetDetailModal = ref(false);
+  const selectedBudget = ref(null);
 
   const filters = ["All", "Monthly", "Weekly", "One-time"];
   const activeFilter = ref("All");
@@ -135,7 +139,20 @@
     isCreateBudgetModalOpen.value = true;
   };
 
+  const openBudgetDetailModal = (budget) => {
+    selectedBudget.value = budget;
+    showBudgetDetailModal.value = true;
+  };
+
+  const handleOpenEditFromDetail = (budget) => {
+    budgetToEdit.value = budget;
+    isEditMode.value = true;
+    showBudgetDetailModal.value = false;
+    isCreateBudgetModalOpen.value = true;
+  };
+
   const openEditModal = (budget) => {
+    // Kept for direct access if needed, but UI uses detail flow now
     isEditMode.value = true;
     budgetToEdit.value = budget;
     isCreateBudgetModalOpen.value = true;
@@ -170,6 +187,7 @@
       await budgetService.deleteBudget(id);
       await fetchData();
       isCreateBudgetModalOpen.value = false;
+      showBudgetDetailModal.value = false;
     } catch (error) {
       console.error("Failed to delete budget:", error);
     }
@@ -246,7 +264,7 @@
             v-for="budget in filteredBudgets"
             :key="budget.id"
             class="cursor-pointer"
-            @click="openEditModal(budget)"
+            @click="openBudgetDetailModal(budget)"
           >
             <BudgetCategoryItem
               :name="budget.name"
@@ -278,13 +296,19 @@
     </div>
 
     <CreateBudgetModal
-      :is-open="isCreateBudgetModalOpen"
+      v-model:open="isCreateBudgetModalOpen"
       :categories="categories"
       :budget-to-edit="budgetToEdit"
       :is-edit-mode="isEditMode"
-      @close="isCreateBudgetModalOpen = false"
       @create="handleCreateBudget"
       @update="handleUpdateBudget"
+      @delete="handleDeleteBudget"
+    />
+
+    <BudgetDetailModal
+      v-model:open="showBudgetDetailModal"
+      :budget="selectedBudget"
+      @edit="handleOpenEditFromDetail"
       @delete="handleDeleteBudget"
     />
 

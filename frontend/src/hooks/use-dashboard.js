@@ -139,6 +139,7 @@ export const useDashboard = () => {
     wallets,
     budgets,
     transactions,
+    categories,
     totalBalance,
     monthlyBudget,
     recentTransactions,

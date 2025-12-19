@@ -19,19 +19,39 @@
   import { ref } from "vue";
   import CreateWalletModal from "./CreateWalletModal.vue";
   import EditWalletModal from "./EditWalletModal.vue";
-  import { walletService } from "../services/finance";
+  import WalletDetailModal from "./WalletDetailModal.vue";
+  import CreateTransactionModal from "./CreateTransactionModal.vue";
+  import TransactionDetailModal from "./TransactionDetailModal.vue";
+  import {
+    walletService,
+    transactionService,
+    budgetService,
+  } from "../services/finance";
   import { useQueryClient } from "@tanstack/vue-query";
   import { formatCurrency } from "../helpers/currency";
 
   const router = useRouter();
   const authStore = useAuthStore();
   const queryClient = useQueryClient();
-  const { totalBalance, monthlyBudget, recentTransactions, wallets } =
-    useDashboard();
+  const {
+    totalBalance,
+    monthlyBudget,
+    recentTransactions,
+    wallets,
+    transactions,
+    categories,
+    budgets,
+  } = useDashboard();
 
   const showCreateWalletModal = ref(false);
   const showEditWalletModal = ref(false);
+  const showWalletDetailModal = ref(false);
   const selectedWallet = ref(null);
+
+  const showCreateTransactionModal = ref(false); // For quick add if needed later
+  const showEditTransactionModal = ref(false);
+  const showTransactionDetailModal = ref(false);
+  const selectedTransaction = ref(null);
 
   const handleCreateWallet = async (walletData) => {
     try {
@@ -50,8 +70,14 @@
     }
   };
 
-  const openEditWalletModal = (wallet) => {
+  const openWalletDetailModal = (wallet) => {
     selectedWallet.value = wallet;
+    showWalletDetailModal.value = true;
+  };
+
+  const handleOpenEditFromDetail = (wallet) => {
+    selectedWallet.value = wallet;
+    showWalletDetailModal.value = false;
     showEditWalletModal.value = true;
   };
 
@@ -72,6 +98,170 @@
     }
   };
 
+  // Transaction Logic
+  const openTransactionDetailModal = (formattedTransaction) => {
+    // Find raw transaction from the full list using ID
+    const raw = transactions.value?.find(
+      (t) => t.id === formattedTransaction.id,
+    );
+    if (raw) {
+      selectedTransaction.value = raw;
+      showTransactionDetailModal.value = true;
+    }
+  };
+
+  const handleOpenEditTransactionFromDetail = (transaction) => {
+    selectedTransaction.value = transaction;
+    showTransactionDetailModal.value = false;
+    showEditTransactionModal.value = true;
+  };
+
+  const handleCreateTransaction = async (data) => {
+    try {
+      await transactionService.createTransaction({
+        userId: authStore.user.id,
+        ...data,
+      });
+      // Budget update for expense
+      if (data.type === "expense" && data.categoryId) {
+        const budget = budgets.value?.find(
+          (b) => b.categoryId === data.categoryId,
+        );
+        if (budget) {
+          await budgetService.updateBudget(budget.id, {
+            spentAmount: (budget.spentAmount || 0) + data.amount,
+          });
+        }
+      }
+      await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await queryClient.invalidateQueries({ queryKey: ["wallets"] });
+      await queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      showCreateTransactionModal.value = false;
+    } catch (error) {
+      console.error("Failed to create transaction:", error);
+    }
+  };
+
+  const handleUpdateTransaction = async (data) => {
+    try {
+      const { id, ...updateData } = data;
+      const oldTransaction = transactions.value?.find((t) => t.id === id);
+
+      if (oldTransaction) {
+        // Revert old wallet effect
+        const oldWallet = wallets.value?.find(
+          (w) => w.id === oldTransaction.walletId,
+        );
+        if (oldWallet) {
+          let reversedBalance = oldWallet.balance;
+          if (oldTransaction.type === "income")
+            reversedBalance -= oldTransaction.amount;
+          else reversedBalance += oldTransaction.amount;
+          await walletService.updateWallet(oldWallet.id, {
+            balance: reversedBalance,
+          });
+        }
+        // Revert old budget effect
+        if (oldTransaction.type === "expense" && oldTransaction.categoryId) {
+          const oldBudget = budgets.value?.find(
+            (b) => b.categoryId === oldTransaction.categoryId,
+          );
+          if (oldBudget) {
+            await budgetService.updateBudget(oldBudget.id, {
+              spentAmount: Math.max(
+                0,
+                (oldBudget.spentAmount || 0) - oldTransaction.amount,
+              ),
+            });
+          }
+        }
+      }
+
+      await transactionService.updateTransaction(id, updateData);
+
+      // Apply new wallet effect
+      // We should refetch wallet to be safe but here we approximate or just invalidate
+      // For immediate consistency locally:
+      const newWallet = wallets.value?.find(
+        (w) => w.id === updateData.walletId,
+      );
+      if (newWallet) {
+        // Fetch fresh wallet to apply new balance
+        const freshWallets = await walletService.getWallets(authStore.user.id);
+        const freshWallet = freshWallets.find(
+          (w) => w.id === updateData.walletId,
+        );
+        if (freshWallet) {
+          let newBalance = freshWallet.balance;
+          if (updateData.type === "income") newBalance += updateData.amount;
+          else newBalance -= updateData.amount;
+          await walletService.updateWallet(freshWallet.id, {
+            balance: newBalance,
+          });
+        }
+      }
+
+      // Apply new budget effect
+      if (updateData.type === "expense" && updateData.categoryId) {
+        const freshBudgets = await budgetService.getBudgets(authStore.user.id);
+        const budget = freshBudgets.find(
+          (b) => b.categoryId === updateData.categoryId,
+        );
+        if (budget) {
+          await budgetService.updateBudget(budget.id, {
+            spentAmount: (budget.spentAmount || 0) + updateData.amount,
+          });
+        }
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await queryClient.invalidateQueries({ queryKey: ["wallets"] });
+      await queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      showEditTransactionModal.value = false;
+      selectedTransaction.value = null;
+    } catch (error) {
+      console.error("Failed to update transaction:", error);
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    try {
+      const transaction = transactions.value?.find((t) => t.id === id);
+      if (transaction) {
+        const wallet = wallets.value?.find(
+          (w) => w.id === transaction.walletId,
+        );
+        if (wallet) {
+          let newBalance = wallet.balance;
+          if (transaction.type === "income") newBalance -= transaction.amount;
+          else newBalance += transaction.amount;
+          await walletService.updateWallet(wallet.id, { balance: newBalance });
+        }
+        if (transaction.type === "expense" && transaction.categoryId) {
+          const budget = budgets.value?.find(
+            (b) => b.categoryId === transaction.categoryId,
+          );
+          if (budget) {
+            await budgetService.updateBudget(budget.id, {
+              spentAmount: Math.max(
+                0,
+                (budget.spentAmount || 0) - transaction.amount,
+              ),
+            });
+          }
+        }
+      }
+      await transactionService.deleteTransaction(id);
+      await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await queryClient.invalidateQueries({ queryKey: ["wallets"] });
+      await queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      showEditTransactionModal.value = false;
+      showTransactionDetailModal.value = false;
+    } catch (error) {
+      console.error("Failed to delete transaction:", error);
+    }
+  };
+
   const navigateToBudgets = () => {
     router.push("/budgets");
   };
@@ -82,15 +272,42 @@
     class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-24 bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark"
   >
     <CreateWalletModal
-      :is-open="showCreateWalletModal"
-      @close="showCreateWalletModal = false"
+      v-model:open="showCreateWalletModal"
       @create="handleCreateWallet"
     />
     <EditWalletModal
-      :is-open="showEditWalletModal"
+      v-model:open="showEditWalletModal"
       :wallet="selectedWallet"
-      @close="showEditWalletModal = false"
       @update="handleEditWallet"
+    />
+    <WalletDetailModal
+      v-model:open="showWalletDetailModal"
+      :wallet="selectedWallet"
+      @edit="handleOpenEditFromDetail"
+    />
+    <CreateTransactionModal
+      v-model:open="showCreateTransactionModal"
+      :is-edit-mode="false"
+      :categories="categories || []"
+      :wallets="wallets || []"
+      @create="handleCreateTransaction"
+    />
+    <CreateTransactionModal
+      v-model:open="showEditTransactionModal"
+      :is-edit-mode="true"
+      :transaction-to-edit="selectedTransaction"
+      :categories="categories || []"
+      :wallets="wallets || []"
+      @update="handleUpdateTransaction"
+      @delete="handleDeleteTransaction"
+    />
+    <TransactionDetailModal
+      v-model:open="showTransactionDetailModal"
+      :transaction="selectedTransaction"
+      :wallets="wallets || []"
+      :categories="categories || []"
+      @edit="handleOpenEditTransactionFromDetail"
+      @delete="handleDeleteTransaction"
     />
     <!-- Header -->
     <header
@@ -184,57 +401,69 @@
     <!-- Total Balance Card -->
     <div class="px-6 py-4">
       <div
-        class="relative overflow-hidden rounded-3xl bg-black dark:bg-surface-dark p-7 shadow-xl shadow-black/5 dark:shadow-none text-white"
+        class="relative overflow-hidden rounded-xl bg-[#1a1a1a] dark:bg-black p-8 shadow-2xl shadow-black/20 text-white border border-white/5"
       >
+        <!-- Background Gradients -->
         <div
-          class="absolute right-0 top-0 h-48 w-48 -translate-y-1/2 translate-x-1/4 rounded-full bg-primary/20 blur-3xl"
+          class="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"
         ></div>
         <div
-          class="absolute bottom-0 left-0 h-32 w-32 translate-y-1/2 -translate-x-1/4 rounded-full bg-blue-500/20 blur-2xl"
+          class="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/20 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/4"
         ></div>
-        <div class="relative z-10 flex flex-col items-center text-center">
-          <p class="text-white/70 text-sm font-medium mb-1">Total Balance</p>
-          <h1 class="text-4xl font-extrabold tracking-tight mb-6">
-            {{ formatCurrency(totalBalance) }}
-          </h1>
-          <div class="grid grid-cols-4 gap-4 w-full">
-            <button class="flex flex-col items-center gap-2 group">
-              <div
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xs group-active:scale-95 transition-all hover:bg-white/20"
-              >
-                <Send class="text-white w-6 h-6" />
+
+        <div class="relative z-10 flex flex-col gap-6">
+          <!-- Total Balance -->
+          <div>
+            <p class="text-gray-400 text-sm font-medium mb-1 tracking-wide">
+              Total Balance
+            </p>
+            <h1 class="text-[2.75rem] font-bold tracking-tight leading-tight">
+              {{ formatCurrency(totalBalance) }}
+            </h1>
+          </div>
+
+          <!-- Monthly Summary -->
+          <div class="flex gap-4">
+            <!-- Income -->
+            <div
+              class="flex-1 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5"
+            >
+              <div class="flex items-center gap-2 mb-2 text-green-400">
+                <div class="p-1.5 bg-green-400/10 rounded-full">
+                  <TrendingUp class="w-3.5 h-3.5" />
+                </div>
+                <span class="text-xs font-bold uppercase tracking-wider"
+                  >Income</span
+                >
               </div>
-              <span class="text-[11px] font-medium text-white/80">Send</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 group">
-              <div
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xs group-active:scale-95 transition-all hover:bg-white/20"
-              >
-                <FileText class="text-white w-6 h-6" />
+              <p class="text-lg font-bold text-white tracking-tight">
+                {{ formatCurrency(monthlyBudget?.limit || 0) }}
+              </p>
+            </div>
+
+            <!-- Expense -->
+            <div
+              class="flex-1 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5"
+            >
+              <div class="flex items-center gap-2 mb-2 text-red-400">
+                <div class="p-1.5 bg-red-400/10 rounded-full">
+                  <TrendingUp class="w-3.5 h-3.5 rotate-180" />
+                </div>
+                <span class="text-xs font-bold uppercase tracking-wider"
+                  >Expense</span
+                >
               </div>
-              <span class="text-[11px] font-medium text-white/80">Request</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 group">
-              <div
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xs group-active:scale-95 transition-all hover:bg-white/20"
-              >
-                <CreditCard class="text-white w-6 h-6" />
-              </div>
-              <span class="text-[11px] font-medium text-white/80">Top-up</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 group">
-              <div
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xs group-active:scale-95 transition-all hover:bg-white/20"
-              >
-                <MoreHorizontal class="text-white w-6 h-6" />
-              </div>
-              <span class="text-[11px] font-medium text-white/80">More</span>
-            </button>
+              <p class="text-lg font-bold text-white tracking-tight">
+                {{ formatCurrency(monthlyBudget?.spent || 0) }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
       <Button
-        class="w-full mt-4 h-auto py-4 shadow-lg shadow-primary/30 active:scale-[0.98] transition-all gap-2"
+        class="w-full mt-4 h-auto py-4 rounded-2xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-black active:scale-[0.98] transition-all gap-2 border border-white/10"
+        @click="showCreateTransactionModal = true"
       >
         <PlusCircle class="font-bold w-6 h-6" />
         <span class="text-base font-bold">Quick Add Transaction</span>
@@ -266,7 +495,7 @@
             "
             overlay-opacity="bg-black/40"
             :exclude-from-totals="wallet.excludeFromTotals"
-            @click="openEditWalletModal(wallet)"
+            @click="openWalletDetailModal(wallet)"
           />
 
           <!-- Add New Wallet Button -->
@@ -302,6 +531,8 @@
           v-for="transaction in recentTransactions"
           :key="transaction.id"
           v-bind="transaction"
+          class="cursor-pointer"
+          @click="openTransactionDetailModal(transaction)"
         />
       </div>
       <div v-else class="text-center text-gray-400 py-4">

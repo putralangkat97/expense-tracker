@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
 import { transactions, wallets } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export const transactionsRoutes = new Elysia({ prefix: "/transactions" })
@@ -15,7 +15,15 @@ export const transactionsRoutes = new Elysia({ prefix: "/transactions" })
   })
   // Get transactions by wallet ID
   .get("/wallet/:walletId", async ({ params: { walletId } }) => {
-    return await db.select().from(transactions).where(eq(transactions.walletId, walletId));
+    return await db
+      .select()
+      .from(transactions)
+      .where(
+        or(
+          eq(transactions.walletId, walletId),
+          eq(transactions.destinationWalletId, walletId),
+        ),
+      );
   })
   // Get transaction by ID
   .get("/:id", async ({ params: { id } }) => {

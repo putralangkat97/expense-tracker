@@ -24,6 +24,7 @@
   import TransactionItem from "./ui/TransactionItem.vue";
   import FloatingActionButton from "./ui/FloatingActionButton.vue";
   import CreateTransactionModal from "./CreateTransactionModal.vue";
+  import TransactionDetailModal from "./TransactionDetailModal.vue";
   import TopAppBar from "./ui/TopAppBar.vue";
   import { useAuthStore } from "../stores/auth";
   import {
@@ -38,6 +39,9 @@
   const isEditMode = ref(false);
   const transactionToEdit = ref(null);
   const isLoading = ref(false);
+
+  const showTransactionDetailModal = ref(false);
+  const selectedTransaction = ref(null);
 
   const filters = ["All", "Income", "Expense", "Transfer"];
   const activeFilter = ref("All");
@@ -206,9 +210,15 @@
     isCreateTransactionModalOpen.value = true;
   };
 
-  const openEditModal = (transactionItem) => {
+  const openTransactionDetailModal = (transactionItem) => {
+    selectedTransaction.value = transactionItem.raw;
+    showTransactionDetailModal.value = true;
+  };
+
+  const handleOpenEditFromDetail = (transaction) => {
+    transactionToEdit.value = transaction;
     isEditMode.value = true;
-    transactionToEdit.value = transactionItem.raw;
+    showTransactionDetailModal.value = false;
     isCreateTransactionModalOpen.value = true;
   };
 
@@ -361,6 +371,7 @@
       await transactionService.deleteTransaction(id);
       await fetchData();
       isCreateTransactionModalOpen.value = false;
+      showTransactionDetailModal.value = false;
     } catch (error) {
       console.error("Failed to delete transaction:", error);
     }
@@ -458,7 +469,7 @@
               v-for="transaction in group.items"
               :key="transaction.id"
               class="cursor-pointer"
-              @click="openEditModal(transaction)"
+              @click="openTransactionDetailModal(transaction)"
             >
               <TransactionItem
                 :title="transaction.title"
@@ -476,14 +487,22 @@
     </main>
 
     <CreateTransactionModal
-      :is-open="isCreateTransactionModalOpen"
+      v-model:open="isCreateTransactionModalOpen"
       :is-edit-mode="isEditMode"
       :transaction-to-edit="transactionToEdit"
       :categories="categories"
       :wallets="wallets"
-      @close="isCreateTransactionModalOpen = false"
       @create="handleCreateTransaction"
       @update="handleUpdateTransaction"
+      @delete="handleDeleteTransaction"
+    />
+
+    <TransactionDetailModal
+      v-model:open="showTransactionDetailModal"
+      :transaction="selectedTransaction"
+      :wallets="wallets"
+      :categories="categories"
+      @edit="handleOpenEditFromDetail"
       @delete="handleDeleteTransaction"
     />
 

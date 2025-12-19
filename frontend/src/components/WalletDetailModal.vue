@@ -1,7 +1,6 @@
 <script setup>
-  import { computed, ref, onMounted, watch } from "vue";
+  import { computed, ref, watch } from "vue";
   import {
-    X,
     Pencil,
     ArrowUpRight,
     ArrowDownLeft,
@@ -26,11 +25,20 @@
     Fuel,
     ArrowLeftRight,
   } from "lucide-vue-next";
-  import BaseModal from "./ui/BaseModal.vue";
+  import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+  } from "./ui/drawer";
   import { transactionService } from "../services/finance";
+  import { formatCurrency } from "../helpers/currency";
 
   const props = defineProps({
-    isOpen: {
+    open: {
       type: Boolean,
       required: true,
     },
@@ -40,10 +48,12 @@
     },
   });
 
-  const emit = defineEmits(["close", "edit"]);
+  const emit = defineEmits(["update:open", "edit"]);
 
   const transactions = ref([]);
   const isLoadingTransactions = ref(false);
+  const totalIncome = ref(0);
+  const totalExpense = ref(0);
 
   const iconMap = {
     Shopping: ShoppingCart,
@@ -76,28 +86,47 @@
       const data = await transactionService.getTransactionsByWallet(
         props.wallet.id,
       );
+
+      let income = 0;
+      let expense = 0;
+
       // Process transactions
-      transactions.value = data
-        .map((t) => ({
+      const processedTransactions = data.map((t) => {
+        // Determine direction relative to this wallet
+        // It is incoming if type is income OR it's a transfer where we are the destination
+        const isIncoming =
+          t.type === "income" ||
+          (t.type === "transfer" && t.destinationWalletId === props.wallet.id);
+
+        if (isIncoming) {
+          income += t.amount;
+        } else {
+          expense += t.amount;
+        }
+
+        return {
           id: t.id,
           title: t.description || "Transaction",
           date: new Date(t.transactionDate).toLocaleDateString(),
-          amount: `${t.type === "income" ? "+" : "-"}${props.wallet.currency} ${t.amount}`,
+          amount: `${isIncoming ? "+" : "-"}${t.amount}`,
           type: t.type,
-          amountColor:
-            t.type === "income"
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400",
+          amountColor: isIncoming
+            ? "text-green-600 dark:text-green-400"
+            : "text-red-600 dark:text-red-400",
           icon: getIconComponent(t.categoryName, t.type), // Note: backend needs to join category name or we mock it. For now generic.
-          iconBg:
-            t.type === "income"
-              ? "bg-green-100 dark:bg-green-900/30"
-              : "bg-red-100 dark:bg-red-900/30",
-          iconColor:
-            t.type === "income"
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400",
-        }))
+          iconBg: isIncoming
+            ? "bg-green-100 dark:bg-green-900/30"
+            : "bg-red-100 dark:bg-red-900/30",
+          iconColor: isIncoming
+            ? "text-green-600 dark:text-green-400"
+            : "text-red-600 dark:text-red-400",
+        };
+      });
+
+      totalIncome.value = income;
+      totalExpense.value = expense;
+
+      transactions.value = processedTransactions
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5); // Show last 5
     } catch (error) {
@@ -110,14 +139,14 @@
   watch(
     () => props.wallet,
     (newWallet) => {
-      if (newWallet && props.isOpen) {
+      if (newWallet && props.open) {
         fetchTransactions();
       }
     },
   );
 
   watch(
-    () => props.isOpen,
+    () => props.open,
     (isOpen) => {
       if (isOpen && props.wallet) {
         fetchTransactions();
@@ -145,155 +174,156 @@
 </script>
 
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 sm:p-0"
-  >
-    <!-- Backdrop -->
-    <div
-      class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-      @click="$emit('close')"
-    ></div>
-
-    <!-- Modal Content -->
-    <div
-      class="relative w-full max-w-md bg-background-light dark:bg-background-dark rounded-t-3xl sm:rounded-3xl shadow-2xl transform transition-all flex flex-col max-h-[90vh]"
-    >
-      <!-- Header with Edit Button -->
-      <div
-        class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800"
-      >
-        <button
-          @click="$emit('close')"
-          class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        >
-          <X class="w-6 h-6 text-gray-500 dark:text-gray-400" />
-        </button>
-        <span class="text-lg font-bold text-text-dark dark:text-white"
-          >Wallet Details</span
-        >
-        <button
-          @click="handleEdit"
-          class="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors"
-        >
-          <Pencil class="w-5 h-5" />
-        </button>
-      </div>
-
-      <!-- Scrollable Content -->
-      <div class="overflow-y-auto p-6 space-y-6 flex-1 min-h-0">
-        <!-- Wallet Card Info -->
-        <div
-          v-if="wallet"
-          class="bg-primary/10 dark:bg-primary/5 rounded-2xl p-6 flex flex-col items-center gap-4"
-        >
-          <div
-            class="w-16 h-16 rounded-full bg-white dark:bg-[#1c2e22] flex items-center justify-center shadow-sm text-primary"
+  <Drawer :open="open" @update:open="$emit('update:open', $event)">
+    <DrawerContent class="max-h-[96vh]! mt-4!">
+      <div class="mx-auto w-full max-w-sm overflow-y-auto pb-6">
+        <DrawerHeader class="flex flex-row items-center justify-between pb-2">
+          <div class="flex flex-col gap-1 text-left">
+            <DrawerTitle>Wallet Details</DrawerTitle>
+            <DrawerDescription
+              >View transaction history and stats.</DrawerDescription
+            >
+          </div>
+          <button
+            @click="handleEdit"
+            class="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors"
           >
-            <component :is="walletIcon" class="w-8 h-8" />
-          </div>
-          <div class="text-center">
-            <h3 class="text-2xl font-extrabold text-text-dark dark:text-white">
-              {{ wallet.name }}
-            </h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 capitalize">
-              {{ wallet.type }} Account
-            </p>
-          </div>
-          <div class="text-center">
-            <p class="text-3xl font-black text-text-dark dark:text-white">
-              {{ wallet.currency }} {{ wallet.balance }}
-            </p>
-            <p class="text-xs text-gray-400 mt-1">Current Balance</p>
-          </div>
-        </div>
+            <Pencil class="w-5 h-5" />
+          </button>
+        </DrawerHeader>
 
-        <!-- Quick Stats (Mocked for now or derived if possible) -->
-        <div class="grid grid-cols-2 gap-4">
+        <!-- Scrollable Content -->
+        <div class="px-4 py-4 space-y-6 flex-1 min-h-0">
+          <!-- Wallet Card Info -->
           <div
-            class="bg-white dark:bg-[#1c2e22] p-4 rounded-xl shadow-xs flex flex-col gap-2"
+            v-if="wallet"
+            class="bg-primary/10 dark:bg-primary/5 rounded-2xl p-6 flex flex-col items-center gap-4"
           >
             <div
-              class="flex items-center gap-2 text-green-600 dark:text-green-400"
+              class="w-16 h-16 rounded-full bg-white dark:bg-[#1c2e22] flex items-center justify-center shadow-sm text-primary"
             >
-              <div class="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <ArrowDownLeft class="w-4 h-4" />
-              </div>
-              <span class="text-xs font-bold">Income</span>
+              <component :is="walletIcon" class="w-8 h-8" />
             </div>
-            <p class="text-lg font-bold text-text-dark dark:text-white">--</p>
-          </div>
-          <div
-            class="bg-white dark:bg-[#1c2e22] p-4 rounded-xl shadow-xs flex flex-col gap-2"
-          >
-            <div class="flex items-center gap-2 text-red-600 dark:text-red-400">
-              <div class="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <ArrowUpRight class="w-4 h-4" />
-              </div>
-              <span class="text-xs font-bold">Expense</span>
-            </div>
-            <p class="text-lg font-bold text-text-dark dark:text-white">--</p>
-          </div>
-        </div>
-
-        <!-- Recent Transactions -->
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="text-base font-bold text-text-dark dark:text-white">
-              Recent Transactions
-            </h4>
-            <button class="text-xs font-bold text-primary">See All</button>
-          </div>
-
-          <div v-if="isLoadingTransactions" class="flex justify-center py-4">
-            <p class="text-gray-400 text-sm">Loading...</p>
-          </div>
-
-          <div
-            v-else-if="transactions.length === 0"
-            class="flex flex-col items-center justify-center py-8 text-gray-400"
-          >
-            <Calendar class="w-10 h-10 mb-2 opacity-50" />
-            <p class="text-sm">No recent transactions</p>
-          </div>
-
-          <div v-else class="space-y-3">
-            <div
-              v-for="transaction in transactions"
-              :key="transaction.id"
-              class="flex items-center justify-between bg-white dark:bg-[#1c2e22] p-3 rounded-xl shadow-xs border border-transparent dark:border-gray-800"
-            >
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  :class="transaction.iconBg"
-                >
-                  <component
-                    :is="transaction.icon"
-                    class="w-5 h-5"
-                    :class="transaction.iconColor"
-                  />
-                </div>
-                <div class="flex flex-col min-w-0">
-                  <p
-                    class="text-sm font-bold text-text-dark dark:text-white truncate"
-                  >
-                    {{ transaction.title }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ transaction.date }}
-                  </p>
-                </div>
-              </div>
-              <span
-                class="text-sm font-bold whitespace-nowrap"
-                :class="transaction.amountColor"
-                >{{ transaction.amount }}</span
+            <div class="text-center">
+              <h3
+                class="text-2xl font-extrabold text-text-dark dark:text-white"
               >
+                {{ wallet.name }}
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                {{ wallet.type }} Account
+              </p>
+            </div>
+            <div class="text-center">
+              <p class="text-3xl font-black text-text-dark dark:text-white">
+                {{ wallet.balance }}
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Current Balance</p>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-2 gap-4">
+            <div
+              class="bg-white dark:bg-[#1c2e22] p-4 rounded-xl shadow-xs flex flex-col gap-2"
+            >
+              <div
+                class="flex items-center gap-2 text-green-600 dark:text-green-400"
+              >
+                <div class="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <ArrowDownLeft class="w-4 h-4" />
+                </div>
+                <span class="text-xs font-bold">Income</span>
+              </div>
+              <p class="text-lg font-bold text-text-dark dark:text-white">
+                {{ formatCurrency(totalIncome, wallet?.currency) }}
+              </p>
+            </div>
+            <div
+              class="bg-white dark:bg-[#1c2e22] p-4 rounded-xl shadow-xs flex flex-col gap-2"
+            >
+              <div
+                class="flex items-center gap-2 text-red-600 dark:text-red-400"
+              >
+                <div class="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <ArrowUpRight class="w-4 h-4" />
+                </div>
+                <span class="text-xs font-bold">Expense</span>
+              </div>
+              <p class="text-lg font-bold text-text-dark dark:text-white">
+                {{ formatCurrency(totalExpense, wallet?.currency) }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-base font-bold text-text-dark dark:text-white">
+                Recent Transactions
+              </h4>
+              <button class="text-xs font-bold text-primary">See All</button>
+            </div>
+
+            <div v-if="isLoadingTransactions" class="flex justify-center py-4">
+              <p class="text-gray-400 text-sm">Loading...</p>
+            </div>
+
+            <div
+              v-else-if="transactions.length === 0"
+              class="flex flex-col items-center justify-center py-8 text-gray-400"
+            >
+              <Calendar class="w-10 h-10 mb-2 opacity-50" />
+              <p class="text-sm">No recent transactions</p>
+            </div>
+
+            <div v-else class="space-y-3">
+              <div
+                v-for="transaction in transactions"
+                :key="transaction.id"
+                class="flex items-center justify-between bg-white dark:bg-[#1c2e22] p-3 rounded-xl shadow-xs border border-transparent dark:border-gray-800"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                    :class="transaction.iconBg"
+                  >
+                    <component
+                      :is="transaction.icon"
+                      class="w-5 h-5"
+                      :class="transaction.iconColor"
+                    />
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <p
+                      class="text-sm font-bold text-text-dark dark:text-white truncate"
+                    >
+                      {{ transaction.title }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      {{ transaction.date }}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="text-sm font-bold whitespace-nowrap"
+                  :class="transaction.amountColor"
+                  >{{ transaction.amount }}</span
+                >
+              </div>
             </div>
           </div>
         </div>
+        <DrawerFooter>
+          <DrawerClose as-child>
+            <button
+              class="w-full py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            >
+              Close
+            </button>
+          </DrawerClose>
+        </DrawerFooter>
       </div>
-    </div>
-  </div>
+    </DrawerContent>
+  </Drawer>
 </template>

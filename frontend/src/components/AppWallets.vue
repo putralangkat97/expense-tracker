@@ -8,7 +8,7 @@
     CreditCard,
   } from "lucide-vue-next";
   import BottomNav from "./ui/BottomNav.vue";
-  import AccountCard from "./ui/AccountCard.vue";
+  import WalletCard from "./ui/WalletCard.vue";
   import CreateWalletModal from "./CreateWalletModal.vue";
   import EditWalletModal from "./EditWalletModal.vue";
   import WalletDetailModal from "./WalletDetailModal.vue";
@@ -176,11 +176,18 @@
 
     <!-- Wallet List -->
     <div class="flex flex-col gap-4 px-4 pb-4">
-      <AccountCard
-        v-for="account in wallets"
-        :key="account.id"
-        v-bind="account"
-        @click="openWalletDetailModal(account)"
+      <WalletCard
+        v-for="wallet in wallets"
+        :key="wallet.id"
+        :name="wallet.name"
+        :balance="wallet.balance"
+        :background-image="
+          wallet.backgroundImage ||
+          'https://lh3.googleusercontent.com/aida-public/AB6AXuCxOxOjPk-E9hLzv9Yt9nAkPDWUgqStFEumXNc0Us390eibU4vGH42SHrl9BOn-yqw86nJdivjlRvVyqtfwbpMw5Lv79sosmK3sfMf4scqXWv6vbt8TFd8Wl1yLFbpEbW3sHUi_h15KB7dbnX_wqqAI-JVDgUNor19AmQXUq-HSLnN4TagXg7ptmVFG5KaU-zmppqv0WaM9n97Q_HmJ2n2NysKA9OdVOYB8pbr9hyUi81MNhKUYKS5D5ITnRdgElDXI0DlSACKpBvk'
+        "
+        :exclude-from-totals="wallet.excludeFromTotals"
+        class="w-full!"
+        @click="openWalletDetailModal(wallet)"
       />
     </div>
 
@@ -226,22 +233,19 @@
     </div>
 
     <CreateWalletModal
-      :is-open="isCreateWalletModalOpen"
-      @close="isCreateWalletModalOpen = false"
+      v-model:open="isCreateWalletModalOpen"
       @create="handleCreateWallet"
     />
 
     <WalletDetailModal
-      :is-open="isWalletDetailModalOpen"
+      v-model:open="isWalletDetailModalOpen"
       :wallet="selectedWallet"
-      @close="isWalletDetailModalOpen = false"
       @edit="handleOpenEditFromDetail"
     />
 
     <EditWalletModal
-      :is-open="isEditWalletModalOpen"
+      v-model:open="isEditWalletModalOpen"
       :wallet="selectedWallet"
-      @close="isEditWalletModalOpen = false"
       @update="handleEditWallet"
     />
 
