@@ -1,0 +1,26 @@
+# Frontend
+/frontend/.env
+/frontend/node_modules
+/frontend/.vscode/*
+/frontend/.vscode/extensions.json
+/frontend/.idea
+/frontend/.DS_Store
+/frontend/*.suo
+/frontend/*.ntvs*
+/frontend/*.njsproj
+/frontend/*.sln
+/frontend/*.sw?
+/frontend/dist
+/frontend/dist-ssr
+/frontend/*.local
+/frontend/logs
+/frontend/*.log
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/pnpm-debug.log*
+/frontend/lerna-debug.log*
+
+# Backend server
+/backend/.env
+/backend/node_modules
