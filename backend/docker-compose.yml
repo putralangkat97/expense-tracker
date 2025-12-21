@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   elysia-api:
@@ -6,9 +6,9 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DB_PATH=/app/data/expense-tracker.db
+      - DB_PATH=/data/expense-tracker.db # Change to /data
     volumes:
-      - app_data:/app/data
+      - app_data:/data # Mount to /data
       - ./drizzle:/app/drizzle:ro
       - ./.env:/app/.env:ro
     labels:
@@ -41,4 +41,3 @@ volumes:
 networks:
   caddy_network:
     name: caddy_network
-    driver: bridge

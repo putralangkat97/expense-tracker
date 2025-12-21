@@ -1,28 +1,19 @@
-FROM oven/bun:1 AS builder
+FROM oven/bun:1
 
 WORKDIR /app
+
+# Copy deps first
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
+# Copy source
 COPY src/ ./src/
 COPY drizzle/ ./drizzle/
 COPY drizzle.config.ts tsconfig.json ./
 
-RUN bun build --compile \
-    --minify \
-    --target bun \
-    --outfile /dist/server \
-    src/index.ts
+# Create data dir with proper perms BEFORE runtime
+RUN mkdir -p /data && chmod 777 /data
 
-# Production runtime
-FROM oven/bun:1-slim
-WORKDIR /app
-
-COPY --from=builder /dist/server /app/server
-
-RUN mkdir -p /app/data \
-    && chmod 777 /app/data
-
-USER 1000:1000
+# Run directly (not compiled)
 EXPOSE 3000
-CMD ["/app/server"]
+CMD ["bun", "run", "src/index.ts"]
