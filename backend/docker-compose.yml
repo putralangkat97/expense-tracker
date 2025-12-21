@@ -2,8 +2,9 @@ version: "3.8"
 
 services:
   elysia-api:
-    build: .
+    image: 745987/expense-api:latest
     restart: unless-stopped
+    pull_policy: always
     environment:
       - NODE_ENV=production
       - DB_PATH=/data/expense-tracker.db # Change to /data
