@@ -1,12 +1,11 @@
-import globals from 'globals';
-import pluginVue from 'eslint-plugin-vue';
-import eslint from '@eslint/js';
-import prettierConfig from 'eslint-config-prettier';
-
+import globals from "globals";
+import pluginVue from "eslint-plugin-vue";
+import eslint from "@eslint/js";
+import prettierConfig from "eslint-config-prettier";
 
 export default [
   eslint.configs.recommended,
-  ...pluginVue.configs['flat/essential'],
+  ...pluginVue.configs["flat/essential"],
   prettierConfig,
   {
     languageOptions: {
@@ -18,11 +17,17 @@ export default [
   },
   {
     rules: {
-      'no-unused-vars': 'off', // Temporarily disable this rule
+      "no-unused-vars": "off", // Temporarily disable this rule
     },
   },
   {
     // Files to ignore
-    ignores: ['dist/**', 'node_modules/**', 'pnpm-lock.yaml'],
-  }
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "pnpm-lock.yaml",
+      "android/**",
+      "coverage/**",
+    ],
+  },
 ];

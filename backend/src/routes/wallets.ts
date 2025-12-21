@@ -4,7 +4,7 @@ import { wallets } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-export const walletsRoutes = new Elysia({ prefix: "/wallets" })
+export const walletsRoutes = new Elysia({ prefix: "/api/wallets" })
   // Get all wallets
   .get("/", async () => {
     return await db.select().from(wallets);

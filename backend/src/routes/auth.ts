@@ -17,7 +17,7 @@ const verifyPassword = async (password: string, hash: string): Promise<boolean> 
   return await Bun.password.verify(password, hash);
 };
 
-export const authRoutes = new Elysia({ prefix: "/auth" })
+export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .use(
     jwt({
       name: "jwt",

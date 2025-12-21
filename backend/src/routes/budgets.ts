@@ -4,7 +4,7 @@ import { budgets } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-export const budgetsRoutes = new Elysia({ prefix: "/budgets" })
+export const budgetsRoutes = new Elysia({ prefix: "/api/budgets" })
   // Get all budgets
   .get("/", async () => {
     return await db.select().from(budgets);

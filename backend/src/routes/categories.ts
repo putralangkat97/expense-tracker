@@ -4,7 +4,7 @@ import { categories } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-export const categoriesRoutes = new Elysia({ prefix: "/categories" })
+export const categoriesRoutes = new Elysia({ prefix: "/api/categories" })
   // Get all categories
   .get("/", async () => {
     return await db.select().from(categories);

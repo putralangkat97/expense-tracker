@@ -1,22 +1,32 @@
-# Use the official Bun image
-FROM oven/bun:1 AS base
+FROM oven/bun:1 AS builder
+
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production=false
+
+# Copy source + migrations
+COPY src/ ./src/
+COPY drizzle/ ./drizzle/
+COPY drizzle.config.ts tsconfig.json ./
+
+# Build production binary
+RUN bun build --compile \
+  --minify \
+  --target bun \
+  --outfile /dist/server \
+  src/index.ts
+
+# Production runtime
+FROM oven/bun:1-slim
 WORKDIR /app
 
-# Install dependencies
-COPY package.json bun.lock ./
-RUN bun install --production
+# Copy compiled binary
+COPY --from=builder /dist/server /app/server
 
-# Copy source code
-COPY . .
+# Create data dir
+RUN mkdir -p /app/data && chown bun:bun /app/data
 
-# Expose the port
-EXPOSE 3001
-
-# Ensure data directory exists
-RUN mkdir -p /app/data
-
-# Entrypoint to run migrations and then start the server
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+# Runtime deps only
+USER bun
+EXPOSE 3000
+CMD ["/app/server"]

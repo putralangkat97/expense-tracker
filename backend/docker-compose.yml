@@ -1,44 +1,43 @@
-services:
-  app:
-    build: .
-    container_name: expense-tracker-api
-    restart: always
-    environment:
-      - PORT=3001
-      - DATABASE_URL=/app/data/expense-tracker.db
-      - JWT_SECRET=${JWT_SECRET:-super_secret_key_change_me}
-    volumes:
-      - ./data:/app/data:Z
-    networks:
-      - expense-net
+version: "3.8"
 
-  nginx:
-    image: nginx:alpine
-    container_name: expense-tracker-nginx
-    restart: always
+services:
+  elysia-api:
+    build: .
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/data/expense-tracker.db
+    volumes:
+      - app_data:/app/data
+      - ./drizzle:/app/drizzle:ro
+      - ./.env:/app/.env:ro
+    labels:
+      caddy: api-expense-tracker.pucukpisang.my.id
+      caddy.reverse_proxy: "{{upstreams 3000}}"
+      caddy.encode: gzip
+    networks:
+      - web
+
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:2.8
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:Z
-      - ./certbot/conf:/etc/letsencrypt:Z
-      - ./certbot/www:/var/www/certbot:Z
-    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
-    depends_on:
-      - app
+      - caddy_data:/data
+      - caddy_config:/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CADDY_INGRESS_NETWORKS=web
     networks:
-      - expense-net
+      - web
 
-  certbot:
-    image: certbot/certbot
-    container_name: expense-tracker-certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt:Z
-      - ./certbot/www:/var/www/certbot:Z
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    networks:
-      - expense-net
+volumes:
+  app_data:
+  caddy_data:
+  caddy_config:
 
 networks:
-  expense-net:
+  web:
     driver: bridge

@@ -4,7 +4,7 @@ import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 // import { randomUUID } from "crypto";
 
-export const usersRoutes = new Elysia({ prefix: "/users" })
+export const usersRoutes = new Elysia({ prefix: "/api/users" })
   // Get all users
   .get("/", async () => {
     return await db.select().from(users);

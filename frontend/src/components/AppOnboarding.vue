@@ -48,7 +48,7 @@
       if (currentSlide.value < slides.length - 1) {
         currentSlide.value = (currentSlide.value + 1) % slides.length;
       } else {
-        router.push("/login");
+        clearInterval(intervalId);
       }
     }, 3000); // Change slide every 3 seconds
   };
