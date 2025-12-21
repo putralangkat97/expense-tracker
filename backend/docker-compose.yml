@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DB_PATH=/data/expense-tracker.db
+      - DB_PATH=/app/data/expense-tracker.db
     volumes:
       - app_data:/app/data
       - ./drizzle:/app/drizzle:ro
@@ -35,9 +35,8 @@ services:
 
 volumes:
   app_data:
-  caddy_data:
-  caddy_config:
 
 networks:
   web:
     driver: bridge
+    name: caddy_web
