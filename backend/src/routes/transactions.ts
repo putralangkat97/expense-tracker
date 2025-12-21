@@ -19,10 +19,7 @@ export const transactionsRoutes = new Elysia({ prefix: "/transactions" })
       .select()
       .from(transactions)
       .where(
-        or(
-          eq(transactions.walletId, walletId),
-          eq(transactions.destinationWalletId, walletId),
-        ),
+        or(eq(transactions.walletId, walletId), eq(transactions.destinationWalletId, walletId)),
       );
   })
   // Get transaction by ID

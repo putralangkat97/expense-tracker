@@ -42,6 +42,6 @@ const app = new Elysia()
   .use(categoriesRoutes)
   .use(transactionsRoutes)
   .use(budgetsRoutes)
-  .listen(3000);
+  .listen(process.env.PORT || 3001);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

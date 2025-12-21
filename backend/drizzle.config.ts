@@ -5,6 +5,6 @@ export default {
   out: "./drizzle",
   dialect: "sqlite",
   dbCredentials: {
-    url: "./expense-tracker.db",
+    url: process.env.DATABASE_URL || "./expense-tracker.db",
   },
 } satisfies Config;

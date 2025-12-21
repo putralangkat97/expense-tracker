@@ -1,66 +1,66 @@
 <script setup>
-import { ref, watch } from "vue";
-import { Wallet, Pencil, ChevronDown, EyeOff, Check } from "lucide-vue-next";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "./ui/drawer";
+  import { ref, watch } from "vue";
+  import { Wallet, Pencil, ChevronDown, EyeOff, Check } from "lucide-vue-next";
+  import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+  } from "./ui/drawer";
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-  wallet: {
-    type: Object,
-    default: null,
-  },
-});
-
-const emit = defineEmits(["update:open", "update"]);
-
-const initialBalance = ref("");
-const walletName = ref("");
-const currency = ref("USD");
-const type = ref("Cash");
-const excludeFromTotals = ref(false);
-
-watch(
-  () => props.wallet,
-  (newWallet) => {
-    if (newWallet) {
-      // Remove currency symbol and formatting if balance is a string
-      let balance = newWallet.balance;
-      if (typeof balance === "string") {
-        balance = balance.replace(/[^0-9.-]+/g, "");
-      }
-      initialBalance.value = balance || "";
-      walletName.value = newWallet.name || "";
-      currency.value = newWallet.currency || "USD";
-      type.value = newWallet.type
-        ? newWallet.type.charAt(0).toUpperCase() + newWallet.type.slice(1)
-        : "Cash";
-      excludeFromTotals.value = newWallet.excludeFromTotals || false;
-    }
-  },
-  { immediate: true },
-);
-
-const handleUpdate = () => {
-  emit("update", {
-    id: props.wallet?.id,
-    initialBalance: initialBalance.value,
-    walletName: walletName.value,
-    currency: currency.value,
-    type: type.value,
-    excludeFromTotals: excludeFromTotals.value,
+  const props = defineProps({
+    open: {
+      type: Boolean,
+      required: true,
+    },
+    wallet: {
+      type: Object,
+      default: null,
+    },
   });
-};
+
+  const emit = defineEmits(["update:open", "update"]);
+
+  const initialBalance = ref("");
+  const walletName = ref("");
+  const currency = ref("USD");
+  const type = ref("Cash");
+  const excludeFromTotals = ref(false);
+
+  watch(
+    () => props.wallet,
+    (newWallet) => {
+      if (newWallet) {
+        // Remove currency symbol and formatting if balance is a string
+        let balance = newWallet.balance;
+        if (typeof balance === "string") {
+          balance = balance.replace(/[^0-9.-]+/g, "");
+        }
+        initialBalance.value = balance || "";
+        walletName.value = newWallet.name || "";
+        currency.value = newWallet.currency || "USD";
+        type.value = newWallet.type
+          ? newWallet.type.charAt(0).toUpperCase() + newWallet.type.slice(1)
+          : "Cash";
+        excludeFromTotals.value = newWallet.excludeFromTotals || false;
+      }
+    },
+    { immediate: true },
+  );
+
+  const handleUpdate = () => {
+    emit("update", {
+      id: props.wallet?.id,
+      initialBalance: initialBalance.value,
+      walletName: walletName.value,
+      currency: currency.value,
+      type: type.value,
+      excludeFromTotals: excludeFromTotals.value,
+    });
+  };
 </script>
 
 <template>

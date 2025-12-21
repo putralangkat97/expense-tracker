@@ -1,85 +1,85 @@
 <script setup>
-import { computed } from "vue";
-import {
-  Pencil,
-  Trash2,
-  Calendar,
-  Wallet,
-  CreditCard,
-  Landmark,
-  Banknote,
-  ShoppingCart,
-  Utensils,
-  Car,
-  Clapperboard,
-  Home,
-  Plane,
-  Zap,
-  HeartPulse,
-  GraduationCap,
-  Briefcase,
-  Gift,
-  Smartphone,
-  ShoppingBag,
-  Fuel,
-  ArrowLeftRight,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-vue-next";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "./ui/drawer";
-import { formatCurrency } from "../helpers/currency";
+  import { computed } from "vue";
+  import {
+    Pencil,
+    Trash2,
+    Calendar,
+    Wallet,
+    CreditCard,
+    Landmark,
+    Banknote,
+    ShoppingCart,
+    Utensils,
+    Car,
+    Clapperboard,
+    Home,
+    Plane,
+    Zap,
+    HeartPulse,
+    GraduationCap,
+    Briefcase,
+    Gift,
+    Smartphone,
+    ShoppingBag,
+    Fuel,
+    ArrowLeftRight,
+    TrendingUp,
+    AlertTriangle,
+  } from "lucide-vue-next";
+  import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+  } from "./ui/drawer";
+  import { formatCurrency } from "../helpers/currency";
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-  budget: {
-    type: Object,
-    default: null,
-  },
-});
+  const props = defineProps({
+    open: {
+      type: Boolean,
+      required: true,
+    },
+    budget: {
+      type: Object,
+      default: null,
+    },
+  });
 
-const emit = defineEmits(["update:open", "edit", "delete"]);
+  const emit = defineEmits(["update:open", "edit", "delete"]);
 
-const budgetDetails = computed(() => {
-  if (!props.budget) return null;
+  const budgetDetails = computed(() => {
+    if (!props.budget) return null;
 
-  const b = props.budget;
-  const spent = b.spentAmount || 0;
-  const limit = b.limitAmount || 0;
-  const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-  const remaining = Math.max(0, limit - spent);
+    const b = props.budget;
+    const spent = b.spentAmount || 0;
+    const limit = b.limitAmount || 0;
+    const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+    const remaining = Math.max(0, limit - spent);
 
-  return {
-    ...b,
-    formattedSpent: formatCurrency(spent),
-    formattedLimit: formatCurrency(limit),
-    formattedRemaining: formatCurrency(remaining),
-    percentage: Math.round(percentage),
-    isOverBudget: spent > limit,
-    icon: b.icon || ShoppingCart, // AppBudgets passes icon component in the object
-    iconBg: b.iconBg || "bg-gray-100 dark:bg-gray-800",
-    iconColor: b.iconColor || "text-gray-500",
-    barColor: b.barColor || "bg-primary",
+    return {
+      ...b,
+      formattedSpent: formatCurrency(spent),
+      formattedLimit: formatCurrency(limit),
+      formattedRemaining: formatCurrency(remaining),
+      percentage: Math.round(percentage),
+      isOverBudget: spent > limit,
+      icon: b.icon || ShoppingCart, // AppBudgets passes icon component in the object
+      iconBg: b.iconBg || "bg-gray-100 dark:bg-gray-800",
+      iconColor: b.iconColor || "text-gray-500",
+      barColor: b.barColor || "bg-primary",
+    };
+  });
+
+  const handleEdit = () => {
+    emit("edit", props.budget);
   };
-});
 
-const handleEdit = () => {
-  emit("edit", props.budget);
-};
-
-const handleDelete = () => {
-  emit("delete", props.budget.id);
-};
+  const handleDelete = () => {
+    emit("delete", props.budget.id);
+  };
 </script>
 
 <template>
@@ -89,7 +89,9 @@ const handleDelete = () => {
         <DrawerHeader class="flex flex-row items-center justify-between pb-2">
           <div class="flex flex-col gap-1 text-left">
             <DrawerTitle>Budget Details</DrawerTitle>
-            <DrawerDescription>Track your spending against limits.</DrawerDescription>
+            <DrawerDescription
+              >Track your spending against limits.</DrawerDescription
+            >
           </div>
           <div class="flex gap-2">
             <button
@@ -125,7 +127,9 @@ const handleDelete = () => {
               <h2 class="text-2xl font-bold text-text-dark dark:text-white">
                 {{ budgetDetails.name }}
               </h2>
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400 capitalize">
+              <p
+                class="text-sm font-medium text-gray-500 dark:text-gray-400 capitalize"
+              >
                 {{ budgetDetails.categoryName }} • {{ budgetDetails.frequency }}
               </p>
             </div>
@@ -136,22 +140,41 @@ const handleDelete = () => {
             <div class="flex justify-between items-end">
               <span class="text-sm font-bold text-text-dark dark:text-white">
                 {{ budgetDetails.formattedSpent }}
-                <span class="text-gray-400 font-normal">/ {{ budgetDetails.formattedLimit }}</span>
+                <span class="text-gray-400 font-normal"
+                  >/ {{ budgetDetails.formattedLimit }}</span
+                >
               </span>
-              <span class="text-xs font-bold" :class="budgetDetails.isOverBudget ? 'text-red-500' : 'text-primary'">
+              <span
+                class="text-xs font-bold"
+                :class="
+                  budgetDetails.isOverBudget ? 'text-red-500' : 'text-primary'
+                "
+              >
                 {{ budgetDetails.percentage }}%
               </span>
             </div>
-            <div class="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div
+              class="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
+            >
               <div
                 class="h-full rounded-full transition-all duration-500"
-                :class="budgetDetails.isOverBudget ? 'bg-red-500' : 'bg-primary'"
+                :class="
+                  budgetDetails.isOverBudget ? 'bg-red-500' : 'bg-primary'
+                "
                 :style="{ width: `${budgetDetails.percentage}%` }"
               ></div>
             </div>
-            <p v-if="budgetDetails.isOverBudget" class="text-xs text-red-500 font-medium flex items-center gap-1 mt-1">
+            <p
+              v-if="budgetDetails.isOverBudget"
+              class="text-xs text-red-500 font-medium flex items-center gap-1 mt-1"
+            >
               <AlertTriangle class="w-3 h-3" />
-              Over budget by {{ formatCurrency(budgetDetails.spentAmount - budgetDetails.limitAmount) }}
+              Over budget by
+              {{
+                formatCurrency(
+                  budgetDetails.spentAmount - budgetDetails.limitAmount,
+                )
+              }}
             </p>
             <p v-else class="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {{ budgetDetails.formattedRemaining }} remaining
@@ -160,12 +183,19 @@ const handleDelete = () => {
 
           <!-- Additional Details -->
           <div class="space-y-4">
-             <div class="flex items-center justify-between p-4 bg-white dark:bg-[#1c2e22] rounded-xl shadow-xs border border-transparent dark:border-gray-800">
+            <div
+              class="flex items-center justify-between p-4 bg-white dark:bg-[#1c2e22] rounded-xl shadow-xs border border-transparent dark:border-gray-800"
+            >
               <div class="flex items-center gap-3">
-                <div class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
+                <div
+                  class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400"
+                >
                   <TrendingUp class="w-5 h-5" />
                 </div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</span>
+                <span
+                  class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                  >Status</span
+                >
               </div>
               <span class="text-sm font-bold text-text-dark dark:text-white">
                 {{ budgetDetails.isOverBudget ? "Exceeded" : "On Track" }}

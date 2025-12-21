@@ -1,91 +1,91 @@
 <script setup>
-import { ref, watch } from "vue";
-import { Pencil, Bell, Check, Trash2 } from "lucide-vue-next";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "./ui/drawer";
+  import { ref, watch } from "vue";
+  import { Pencil, Bell, Check, Trash2 } from "lucide-vue-next";
+  import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+  } from "./ui/drawer";
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-  categories: {
-    type: Array,
-    default: () => [],
-  },
-  budgetToEdit: {
-    type: Object,
-    default: null,
-  },
-  isEditMode: {
-    type: Boolean,
-    default: false,
-  },
-});
+  const props = defineProps({
+    open: {
+      type: Boolean,
+      required: true,
+    },
+    categories: {
+      type: Array,
+      default: () => [],
+    },
+    budgetToEdit: {
+      type: Object,
+      default: null,
+    },
+    isEditMode: {
+      type: Boolean,
+      default: false,
+    },
+  });
 
-const emit = defineEmits(["update:open", "create", "update", "delete"]);
+  const emit = defineEmits(["update:open", "create", "update", "delete"]);
 
-const amount = ref("0");
-const budgetName = ref("");
-const frequency = ref("Monthly");
-const selectedCategoryId = ref(null);
-const alertEnabled = ref(true);
+  const amount = ref("0");
+  const budgetName = ref("");
+  const frequency = ref("Monthly");
+  const selectedCategoryId = ref(null);
+  const alertEnabled = ref(true);
 
-const frequencies = ["Weekly", "Monthly", "One-time"];
+  const frequencies = ["Weekly", "Monthly", "One-time"];
 
-watch(
-  () => props.open,
-  (newVal) => {
-    if (newVal) {
-      if (props.isEditMode && props.budgetToEdit) {
-        amount.value = props.budgetToEdit.limitAmount.toString();
-        budgetName.value = props.budgetToEdit.name;
-        frequency.value =
-          props.budgetToEdit.frequency.charAt(0).toUpperCase() +
-          props.budgetToEdit.frequency.slice(1);
-        selectedCategoryId.value = props.budgetToEdit.categoryId;
-        alertEnabled.value = props.budgetToEdit.alertEnabled;
-      } else {
-        // Reset form for create mode
-        amount.value = "0";
-        budgetName.value = "";
-        frequency.value = "Monthly";
-        selectedCategoryId.value =
-          props.categories.length > 0 ? props.categories[0].id : null;
-        alertEnabled.value = true;
+  watch(
+    () => props.open,
+    (newVal) => {
+      if (newVal) {
+        if (props.isEditMode && props.budgetToEdit) {
+          amount.value = props.budgetToEdit.limitAmount.toString();
+          budgetName.value = props.budgetToEdit.name;
+          frequency.value =
+            props.budgetToEdit.frequency.charAt(0).toUpperCase() +
+            props.budgetToEdit.frequency.slice(1);
+          selectedCategoryId.value = props.budgetToEdit.categoryId;
+          alertEnabled.value = props.budgetToEdit.alertEnabled;
+        } else {
+          // Reset form for create mode
+          amount.value = "0";
+          budgetName.value = "";
+          frequency.value = "Monthly";
+          selectedCategoryId.value =
+            props.categories.length > 0 ? props.categories[0].id : null;
+          alertEnabled.value = true;
+        }
       }
-    }
-  },
-);
+    },
+  );
 
-const handleSubmit = () => {
-  const budgetData = {
-    limitAmount: Number(amount.value.replace(/,/g, "")),
-    name: budgetName.value,
-    frequency: frequency.value.toLowerCase(),
-    categoryId: selectedCategoryId.value,
-    alertEnabled: alertEnabled.value,
+  const handleSubmit = () => {
+    const budgetData = {
+      limitAmount: Number(amount.value.replace(/,/g, "")),
+      name: budgetName.value,
+      frequency: frequency.value.toLowerCase(),
+      categoryId: selectedCategoryId.value,
+      alertEnabled: alertEnabled.value,
+    };
+
+    if (props.isEditMode) {
+      emit("update", { id: props.budgetToEdit.id, ...budgetData });
+    } else {
+      emit("create", budgetData);
+    }
   };
 
-  if (props.isEditMode) {
-    emit("update", { id: props.budgetToEdit.id, ...budgetData });
-  } else {
-    emit("create", budgetData);
-  }
-};
-
-const handleDelete = () => {
-  if (props.budgetToEdit) {
-    emit("delete", props.budgetToEdit.id);
-  }
-};
+  const handleDelete = () => {
+    if (props.budgetToEdit) {
+      emit("delete", props.budgetToEdit.id);
+    }
+  };
 </script>
 
 <template>
@@ -107,7 +107,8 @@ const handleDelete = () => {
             Set Amount
           </p>
           <div class="relative flex items-center justify-center">
-            <span class="text-4xl font-bold text-gray-400 dark:text-gray-500 mr-1"
+            <span
+              class="text-4xl font-bold text-gray-400 dark:text-gray-500 mr-1"
               >$</span
             >
             <input
@@ -123,7 +124,8 @@ const handleDelete = () => {
         <div class="p-4 space-y-6">
           <!-- Budget Name -->
           <div class="space-y-3">
-            <label class="block text-sm font-bold text-text-dark dark:text-white"
+            <label
+              class="block text-sm font-bold text-text-dark dark:text-white"
               >Budget Name</label
             >
             <div class="relative">
@@ -141,7 +143,8 @@ const handleDelete = () => {
 
           <!-- Frequency Selector -->
           <div class="space-y-3">
-            <label class="block text-sm font-bold text-text-dark dark:text-white"
+            <label
+              class="block text-sm font-bold text-text-dark dark:text-white"
               >Frequency</label
             >
             <div class="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl flex">
@@ -164,7 +167,8 @@ const handleDelete = () => {
           <!-- Categories -->
           <div class="space-y-3">
             <div class="flex justify-between items-center">
-              <label class="block text-sm font-bold text-text-dark dark:text-white"
+              <label
+                class="block text-sm font-bold text-text-dark dark:text-white"
                 >Category</label
               >
               <button

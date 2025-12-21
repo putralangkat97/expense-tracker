@@ -1,130 +1,130 @@
 <script setup>
-import { ref, watch, computed } from "vue";
-import {
-  Utensils,
-  Calendar,
-  Wallet,
-  ChevronDown,
-  Repeat,
-  Camera,
-  Check,
-  Trash2,
-} from "lucide-vue-next";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "./ui/drawer";
+  import { ref, watch, computed } from "vue";
+  import {
+    Utensils,
+    Calendar,
+    Wallet,
+    ChevronDown,
+    Repeat,
+    Camera,
+    Check,
+    Trash2,
+  } from "lucide-vue-next";
+  import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+  } from "./ui/drawer";
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-  isEditMode: {
-    type: Boolean,
-    default: false,
-  },
-  transactionToEdit: {
-    type: Object,
-    default: null,
-  },
-  categories: {
-    type: Array,
-    default: () => [],
-  },
-  wallets: {
-    type: Array,
-    default: () => [],
-  },
-});
+  const props = defineProps({
+    open: {
+      type: Boolean,
+      required: true,
+    },
+    isEditMode: {
+      type: Boolean,
+      default: false,
+    },
+    transactionToEdit: {
+      type: Object,
+      default: null,
+    },
+    categories: {
+      type: Array,
+      default: () => [],
+    },
+    wallets: {
+      type: Array,
+      default: () => [],
+    },
+  });
 
-const emit = defineEmits(["update:open", "create", "update", "delete"]);
+  const emit = defineEmits(["update:open", "create", "update", "delete"]);
 
-const transactionType = ref("expense");
-const amount = ref("0.00");
-const categoryId = ref(null);
-const date = ref(new Date().toISOString().split("T")[0]);
-const walletId = ref(null);
-const destinationWalletId = ref(null);
-const isRecurring = ref(false);
-const description = ref("");
+  const transactionType = ref("expense");
+  const amount = ref("0.00");
+  const categoryId = ref(null);
+  const date = ref(new Date().toISOString().split("T")[0]);
+  const walletId = ref(null);
+  const destinationWalletId = ref(null);
+  const isRecurring = ref(false);
+  const description = ref("");
 
-const selectedCategory = computed(() =>
-  props.categories.find((c) => c.id === categoryId.value),
-);
+  const selectedCategory = computed(() =>
+    props.categories.find((c) => c.id === categoryId.value),
+  );
 
-const selectedWallet = computed(() =>
-  props.wallets.find((w) => w.id === walletId.value),
-);
+  const selectedWallet = computed(() =>
+    props.wallets.find((w) => w.id === walletId.value),
+  );
 
-const availableDestinationWallets = computed(() =>
-  props.wallets.filter((w) => w.id !== walletId.value),
-);
+  const availableDestinationWallets = computed(() =>
+    props.wallets.filter((w) => w.id !== walletId.value),
+  );
 
-watch(
-  () => props.open,
-  (newVal) => {
-    if (newVal) {
-      if (props.isEditMode && props.transactionToEdit) {
-        transactionType.value = props.transactionToEdit.type;
-        amount.value = props.transactionToEdit.amount.toString();
-        categoryId.value = props.transactionToEdit.categoryId;
-        date.value = props.transactionToEdit.transactionDate
-          ? new Date(props.transactionToEdit.transactionDate)
-              .toISOString()
-              .split("T")[0]
-          : new Date().toISOString().split("T")[0];
-        walletId.value = props.transactionToEdit.walletId;
-        destinationWalletId.value =
-          props.transactionToEdit.destinationWalletId || null;
-        isRecurring.value = props.transactionToEdit.isRecurring;
-        description.value = props.transactionToEdit.description || "";
-      } else {
-        // Reset form
-        transactionType.value = "expense";
-        amount.value = "0.00";
-        categoryId.value = props.categories[0]?.id || null;
-        date.value = new Date().toISOString().split("T")[0];
-        walletId.value = props.wallets[0]?.id || null;
-        destinationWalletId.value =
-          props.wallets.length > 1 ? props.wallets[1].id : null;
-        isRecurring.value = false;
-        description.value = "";
+  watch(
+    () => props.open,
+    (newVal) => {
+      if (newVal) {
+        if (props.isEditMode && props.transactionToEdit) {
+          transactionType.value = props.transactionToEdit.type;
+          amount.value = props.transactionToEdit.amount.toString();
+          categoryId.value = props.transactionToEdit.categoryId;
+          date.value = props.transactionToEdit.transactionDate
+            ? new Date(props.transactionToEdit.transactionDate)
+                .toISOString()
+                .split("T")[0]
+            : new Date().toISOString().split("T")[0];
+          walletId.value = props.transactionToEdit.walletId;
+          destinationWalletId.value =
+            props.transactionToEdit.destinationWalletId || null;
+          isRecurring.value = props.transactionToEdit.isRecurring;
+          description.value = props.transactionToEdit.description || "";
+        } else {
+          // Reset form
+          transactionType.value = "expense";
+          amount.value = "0.00";
+          categoryId.value = props.categories[0]?.id || null;
+          date.value = new Date().toISOString().split("T")[0];
+          walletId.value = props.wallets[0]?.id || null;
+          destinationWalletId.value =
+            props.wallets.length > 1 ? props.wallets[1].id : null;
+          isRecurring.value = false;
+          description.value = "";
+        }
       }
-    }
-  },
-);
+    },
+  );
 
-const handleSubmit = () => {
-  const data = {
-    type: transactionType.value,
-    amount: parseFloat(amount.value),
-    categoryId: categoryId.value,
-    transactionDate: date.value,
-    walletId: walletId.value,
-    destinationWalletId:
-      transactionType.value === "transfer" ? destinationWalletId.value : null,
-    isRecurring: isRecurring.value,
-    description: description.value,
+  const handleSubmit = () => {
+    const data = {
+      type: transactionType.value,
+      amount: parseFloat(amount.value),
+      categoryId: categoryId.value,
+      transactionDate: date.value,
+      walletId: walletId.value,
+      destinationWalletId:
+        transactionType.value === "transfer" ? destinationWalletId.value : null,
+      isRecurring: isRecurring.value,
+      description: description.value,
+    };
+
+    if (props.isEditMode) {
+      emit("update", { id: props.transactionToEdit.id, ...data });
+    } else {
+      emit("create", data);
+    }
   };
 
-  if (props.isEditMode) {
-    emit("update", { id: props.transactionToEdit.id, ...data });
-  } else {
-    emit("create", data);
-  }
-};
-
-const handleDelete = () => {
-  if (props.transactionToEdit) {
-    emit("delete", props.transactionToEdit.id);
-  }
-};
+  const handleDelete = () => {
+    if (props.transactionToEdit) {
+      emit("delete", props.transactionToEdit.id);
+    }
+  };
 </script>
 
 <template>
@@ -188,7 +188,8 @@ const handleDelete = () => {
         <!-- Amount Input -->
         <div class="mb-8 text-center px-4">
           <div class="flex items-center justify-center">
-            <span class="text-3xl font-bold text-gray-400 dark:text-gray-600 mr-1"
+            <span
+              class="text-3xl font-bold text-gray-400 dark:text-gray-600 mr-1"
               >$</span
             >
             <input
@@ -218,7 +219,11 @@ const handleDelete = () => {
                   v-model="categoryId"
                   class="appearance-none w-full h-14 pl-12 pr-10 bg-white dark:bg-[#1c2e22] border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xs text-sm font-medium text-text-dark dark:text-white focus:border-primary focus:ring-0 transition-colors outline-hidden"
                 >
-                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                  <option
+                    v-for="cat in categories"
+                    :key="cat.id"
+                    :value="cat.id"
+                  >
                     {{ cat.name }}
                   </option>
                 </select>
@@ -288,7 +293,10 @@ const handleDelete = () => {
           </div>
 
           <!-- Destination Wallet Selection (Only for Transfer) -->
-          <div v-if="transactionType === 'transfer'" class="flex flex-col gap-1.5">
+          <div
+            v-if="transactionType === 'transfer'"
+            class="flex flex-col gap-1.5"
+          >
             <label
               class="text-xs font-semibold text-gray-500 dark:text-gray-400 ml-1"
               >To Wallet</label
@@ -330,7 +338,8 @@ const handleDelete = () => {
                 <Repeat class="w-5 h-5" />
               </div>
               <div class="flex flex-col">
-                <span class="text-sm font-semibold text-text-dark dark:text-white"
+                <span
+                  class="text-sm font-semibold text-text-dark dark:text-white"
                   >Repeat Transaction</span
                 >
                 <span class="text-xs text-gray-500 dark:text-gray-400"
@@ -339,7 +348,11 @@ const handleDelete = () => {
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" v-model="isRecurring" class="sr-only peer" />
+              <input
+                type="checkbox"
+                v-model="isRecurring"
+                class="sr-only peer"
+              />
               <div
                 class="w-11 h-6 bg-gray-200 peer-focus:outline-hidden rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"
               ></div>
@@ -368,7 +381,9 @@ const handleDelete = () => {
             >
               <div class="flex flex-col items-center justify-center pt-5 pb-6">
                 <Camera class="w-6 h-6 text-gray-400 mb-1" />
-                <p class="text-xs text-gray-500 dark:text-gray-400">Add Receipt</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Add Receipt
+                </p>
               </div>
               <input class="hidden" type="file" />
             </label>
