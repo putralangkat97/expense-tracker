@@ -15,7 +15,8 @@
 
 <template>
   <div
-    class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10"
+    class="flex items-center bg-background-light dark:bg-background-dark px-4 pb-2 justify-between transition-all duration-200"
+    :style="{ paddingTop: 'calc(1rem + var(--safe-area-top))' }"
   >
     <div class="flex size-12 shrink-0 items-center">
       <div

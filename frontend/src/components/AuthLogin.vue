@@ -61,7 +61,9 @@
 </script>
 
 <template>
-  <div class="w-full max-w-105 mx-auto flex flex-col gap-6 p-6">
+  <div
+    class="w-full max-w-105 mx-auto flex flex-col pt-10 gap-6 px-6 pb-6 overflow-y-auto"
+  >
     <!-- Header Section -->
     <div class="flex flex-col items-center text-center space-y-4 pt-4">
       <div

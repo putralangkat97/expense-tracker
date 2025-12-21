@@ -64,7 +64,7 @@
   const sizeClasses = computed(() => {
     switch (size) {
       case "sm":
-        return "h-9 px-3 text-sm";
+        return "h-10 px-4 text-sm";
       case "lg":
         return "h-14 px-8 text-lg";
       case "icon":

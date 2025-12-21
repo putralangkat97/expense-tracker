@@ -35,7 +35,11 @@
 
 <template>
   <nav
-    class="fixed bottom-0 w-full h-[88px] bg-white/70 dark:bg-[#1c2e22]/70 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 flex justify-around items-start pt-3 z-50 pb-8 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.03)]"
+    class="fixed bottom-0 w-full bg-white/70 dark:bg-[#1c2e22]/70 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 flex justify-around items-start pt-3 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]"
+    :style="{
+      paddingBottom: 'calc(1rem + var(--safe-area-bottom))',
+      height: 'calc(4rem + var(--safe-area-bottom))',
+    }"
   >
     <button
       v-for="item in navItems"
@@ -60,7 +64,4 @@
       >
     </button>
   </nav>
-  <div
-    class="h-[env(safe-area-inset-bottom)] w-full bg-surface-light dark:bg-surface-dark"
-  ></div>
 </template>

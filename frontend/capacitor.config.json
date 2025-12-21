@@ -1,5 +1,6 @@
 {
   "appId": "com.pucukpisang.expensetracker",
   "appName": "Lalitdua",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {}
 }

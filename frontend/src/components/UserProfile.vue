@@ -48,16 +48,16 @@
   >
     <!-- Top App Bar -->
     <div
-      class="sticky top-0 z-50 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 px-4 py-3 backdrop-blur-md"
+      class="flex items-center justify-center bg-background-light/95 dark:bg-background-dark/95 px-4 py-3 backdrop-blur-md"
     >
-      <button
+      <!-- <button
         class="group flex size-10 items-center justify-center rounded-full active:bg-black/5 dark:active:bg-white/10 transition-colors"
         @click="handleBack"
       >
         <ArrowLeft class="w-6 h-6" />
-      </button>
+      </button> -->
       <h1 class="text-xl font-bold tracking-tight">Settings</h1>
-      <div class="size-10"></div>
+      <!-- <div class="size-10"></div> -->
       <!-- Spacer for visual balance -->
     </div>
 

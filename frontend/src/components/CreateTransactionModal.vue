@@ -46,7 +46,7 @@
   const emit = defineEmits(["update:open", "create", "update", "delete"]);
 
   const transactionType = ref("expense");
-  const amount = ref("0.00");
+  const amount = ref("");
   const categoryId = ref(null);
   const date = ref(new Date().toISOString().split("T")[0]);
   const walletId = ref(null);
@@ -129,7 +129,7 @@
 
 <template>
   <Drawer :open="open" @update:open="$emit('update:open', $event)">
-    <DrawerContent class="!max-h-[96vh] !mt-4">
+    <DrawerContent class="max-h-[96vh]! mt-4!">
       <div class="mx-auto w-full max-w-sm overflow-y-auto pb-6">
         <DrawerHeader>
           <DrawerTitle class="text-center">

@@ -384,7 +384,7 @@
   >
     <!-- Top Sticky Header Area -->
     <header
-      class="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-300"
+      class="bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-300"
     >
       <TopAppBar title="Transactions" :action-icon="FilterIcon" />
       <!-- Search Bar Integrated in Header -->

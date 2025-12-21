@@ -269,7 +269,7 @@
 
 <template>
   <div
-    class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-24 bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark"
+    class="relative flex min-h-screen pt-10 w-full flex-col overflow-x-hidden pb-24 bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark"
   >
     <CreateWalletModal
       v-model:open="showCreateWalletModal"
@@ -311,7 +311,7 @@
     />
     <!-- Header -->
     <header
-      class="flex items-center justify-between p-6 pt-8 pb-4 sticky top-0 z-30 bg-background-light/90 dark:bg-background-dark/95 backdrop-blur-md"
+      class="flex items-center justify-between p-6 pt-8 pb-4 bg-background-light/90 dark:bg-background-dark/95 backdrop-blur-md"
     >
       <div class="flex flex-col">
         <span
@@ -401,7 +401,7 @@
     <!-- Total Balance Card -->
     <div class="px-6 py-4">
       <div
-        class="relative overflow-hidden rounded-xl bg-[#1a1a1a] dark:bg-black p-8 shadow-2xl shadow-black/20 text-white border border-white/5"
+        class="relative overflow-hidden rounded-xl bg-[#1a1a1a] dark:bg-black py-4 px-3 shadow-2xl shadow-black/20 text-white border border-white/5"
       >
         <!-- Background Gradients -->
         <div
@@ -417,20 +417,20 @@
             <p class="text-gray-400 text-sm font-medium mb-1 tracking-wide">
               Total Balance
             </p>
-            <h1 class="text-[2.75rem] font-bold tracking-tight leading-tight">
+            <h1 class="text-3xl font-bold tracking-tight leading-tight">
               {{ formatCurrency(totalBalance) }}
             </h1>
           </div>
 
           <!-- Monthly Summary -->
-          <div class="flex gap-4">
+          <div class="flex gap-2">
             <!-- Income -->
             <div
-              class="flex-1 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5"
+              class="flex-1 bg-white/5 backdrop-blur-md rounded-2xl p-2 border border-white/5"
             >
               <div class="flex items-center gap-2 mb-2 text-green-400">
                 <div class="p-1.5 bg-green-400/10 rounded-full">
-                  <TrendingUp class="w-3.5 h-3.5" />
+                  <TrendingUp class="w-3 h-3" />
                 </div>
                 <span class="text-xs font-bold uppercase tracking-wider"
                   >Income</span
@@ -443,11 +443,11 @@
 
             <!-- Expense -->
             <div
-              class="flex-1 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5"
+              class="flex-1 bg-white/5 backdrop-blur-md rounded-2xl p-2 border border-white/5"
             >
               <div class="flex items-center gap-2 mb-2 text-red-400">
                 <div class="p-1.5 bg-red-400/10 rounded-full">
-                  <TrendingUp class="w-3.5 h-3.5 rotate-180" />
+                  <TrendingUp class="w-3 h-3 rotate-180" />
                 </div>
                 <span class="text-xs font-bold uppercase tracking-wider"
                   >Expense</span
