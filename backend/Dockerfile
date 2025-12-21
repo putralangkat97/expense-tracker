@@ -20,12 +20,9 @@ WORKDIR /app
 
 COPY --from=builder /dist/server /app/server
 
-# Fix permissions: create dir owned by runtime user
 RUN mkdir -p /app/data \
-    && chown -R 1000:1000 /app/data \
-    && chmod 755 /app/data
+    && chmod 777 /app/data
 
-# Switch to non-root user
 USER 1000:1000
 EXPOSE 3000
 CMD ["/app/server"]
