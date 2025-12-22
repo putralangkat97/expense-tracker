@@ -32,7 +32,7 @@ services:
       retries: 5
 
   elysia-api:
-    image: 745987/expense-api:latest
+    image: 745987/expense-api:v1
     restart: unless-stopped
     pull_policy: always
     environment:
