@@ -34,7 +34,7 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/expense-api:latest
+            ${{ secrets.DOCKER_USERNAME }}/expense-api:v1
             ${{ secrets.DOCKER_USERNAME }}/expense-api:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/expense-api:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/expense-api:buildcache,mode=max
