@@ -17,6 +17,11 @@ const app = new Elysia()
     }),
   )
   .get("/", () => "Expense Tracker API")
+  .get("/health", () => ({
+    status: "ok",
+    timestamp: new Date(),
+    uptime: process.uptime(),
+  }))
   .use(authRoutes)
   .derive(async ({ jwt, headers }) => {
     const auth = headers["authorization"];
@@ -31,7 +36,7 @@ const app = new Elysia()
     return { user: payload };
   })
   .onBeforeHandle(({ user, path, set }) => {
-    if (path.startsWith("/auth") || path === "/") return;
+    if (path.startsWith("/auth") || path === "/" || path === "/health") return;
     if (!user) {
       set.status = 401;
       return { error: "Unauthorized" };

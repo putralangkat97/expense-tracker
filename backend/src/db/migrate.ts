@@ -1,4 +1,4 @@
-import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { db } from "./index";
 import { categories } from "./schema";
 import { and, eq } from "drizzle-orm";
@@ -7,7 +7,7 @@ console.log("Running migrations...");
 
 // Run migrations from the drizzle folder
 // This ensures the database schema matches exactly what Drizzle Kit generated
-migrate(db, { migrationsFolder: "./drizzle" });
+await migrate(db, { migrationsFolder: "./drizzle" });
 console.log("✅ Database migrations completed!");
 
 // Seed default categories
