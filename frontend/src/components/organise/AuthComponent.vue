@@ -24,7 +24,7 @@
         <p
           class="text-text-muted dark:text-gray-400 text-sm font-medium leading-normal"
         >
-          Track expenses, manage budgets, and save more.
+          Track expenses, manage budgets, and save more money.
         </p>
       </div>
     </div>
