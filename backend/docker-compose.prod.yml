@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - POSTGRES_USER=elysia_api
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=Hl+M8Th6145p9sl8
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -14,7 +14,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,7 +25,7 @@ services:
     pull_policy: always
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://elysia_api:Hl+M8Th6145p9sl8@postgres:5432/
+      - DATABASE_URL=postgresql://elysia_api:Hl+M8Th6145p9sl8@postgres:5432/expense_tracker
       - LOG_LEVEL=info
       - JWT_SECRET=07b72d2a78bd6a92f1a4cb04d3b65120
       - PORT=3000
