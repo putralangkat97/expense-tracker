@@ -1,1 +1,0 @@
-ALTER TABLE `transactions` ADD `destination_wallet_id` text REFERENCES wallets(id);
