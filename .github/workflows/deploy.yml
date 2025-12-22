@@ -63,15 +63,15 @@ jobs:
 
             # Update docker-compose.yml to use new image
             echo "🐳 Updating Docker images..."
-            docker compose pull
+            docker compose -f docker-compose.prod.yml pull
 
             # Start services with new image
             docker compose -f docker-compose.prod.yml up -d
 
             # Run migrations (optional but recommended)
             echo "📊 Running migrations..."
-            docker compose exec -T elysia-api bun src/db/migrate.ts || echo "⚠️ Migration skipped"
+            docker compose -f docker-compose.prod.yml exec -T elysia-api bun src/db/migrate.ts || echo "⚠️ Migration skipped"
 
             # Show status
             echo "✅ Deployment complete!"
-            docker compose ps
+            docker compose -f docker-compose.prod.yml ps
