@@ -1,1 +1,13 @@
-{"version":"7","dialect":"sqlite","entries":[]}
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1766394748565,
+      "tag": "0000_long_stingray",
+      "breakpoints": true
+    }
+  ]
+}
