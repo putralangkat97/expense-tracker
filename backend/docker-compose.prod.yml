@@ -1,4 +1,16 @@
 services:
+  watchtower:
+    image: nickfedor/watchtower:latest
+    command:
+      - "--label-enable"
+      - "--interval"
+      - "30"
+      - "--rolling-restart"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - app_network
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
